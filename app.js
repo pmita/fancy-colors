@@ -35,9 +35,21 @@ function randomColors(){
         //Add generated hex to background and header
         div.style.backgroundColor = randomColor;
         hexText.innerText = randomColor;
+
+        //Check for contrast
+        checkTextContrast(randomColor, hexText);
     });
 }
 
-randomColors();
+function checkTextContrast(color, text){
+    //Find the lumosity for each color
+    const luminance = chroma(color).luminance();
+    if (luminance > 0.5){
+        text.style.color = "black";
+    } else{
+        text.style.color = "white";
+    }
+    
+}
 
-let randomHex = generateHex();
+randomColors();
