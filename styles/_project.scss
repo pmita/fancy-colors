@@ -1,0 +1,88 @@
+.colors{
+    min-height: 80vh;
+    @include flex(row, center, center);
+    color: $white;
+}
+
+.color{
+    flex: 1;
+    height: 80vh;
+    @include flex(column, space-evenly, center);
+    position: relative;
+    overflow: hidden;
+    h2{
+        font-size: 2rem;
+        cursor: pointer;
+    }
+}
+
+.controls{
+    @include flex( column, center, center);
+    /*Style the adjusting and locking button on the main panel*/
+    .adjust,
+    .lock{
+        font-size: 2rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+        margin: 2rem 0rem;
+    }
+}
+
+/*Styling the color, brightness, and saturation panels*/
+.sliders{
+    @include flex(column, center, center);
+    position: absolute;
+    bottom: 0;
+    background: white;
+    opacity: 0;
+    padding: 1rem;
+    width: 80%;
+    border-radius: 1rem;
+    pointer-events: none;
+    /*Hide each of the slider*/
+    transform: translateY(100px);
+    transition: all 0.5s ease-in-out;
+    button{
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 0.5rem;
+        background: rgba(116, 116, 116, 1);
+        border-radius: 50%;
+        border: none;
+        color: yellow;
+    }
+}
+.sliders.active{
+    opacity: 1;
+    transform: translateY(0px);
+    pointer-events: all;
+}
+
+
+/*Style the bottom 20vh of the screen*/
+.panel{
+    height: 20vh;
+    @include flex( row, space-evenly, center);
+    button{
+        font-size: 1.2rem;
+        margin: 1rem;
+        padding: 1rem;
+        background: rgb(66, 106, 238);
+        border: none;
+        border-radius: 10px;
+        color: $white;
+    }
+    p{
+        font-size: 1.2rem;
+    }
+}
+
+/*Make all individual panels look the same*/
+.library-panel,
+.generate-panel,
+.save-panel{
+    @include flex(column, center, center);
+}
+
