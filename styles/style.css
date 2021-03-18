@@ -118,14 +118,13 @@ svg {
   position: absolute;
   bottom: 0;
   background: white;
-  opacity: 0;
+  opacity: 0.9;
   padding: 1rem;
   width: 80%;
   border-radius: 1rem;
-  pointer-events: none;
+  /*pointer-events: none;*/
   /*Hide each of the slider*/
-  -webkit-transform: translateY(100px);
-          transform: translateY(100px);
+  /*transform: translateY(100px);*/
   -webkit-transition: all 0.5s ease-in-out;
   transition: all 0.5s ease-in-out;
 }
@@ -136,7 +135,7 @@ svg {
   right: 0;
   padding: 0.5rem;
   background: #747474;
-  border-radius: 50%;
+  border-radius: 0px;
   border: none;
   color: yellow;
 }
@@ -146,6 +145,15 @@ svg {
   -webkit-transform: translateY(0px);
           transform: translateY(0px);
   pointer-events: all;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  margin: 1rem 0rem;
+  width: 100%;
+  position: relative;
+  border-radius: 1rem;
+  cursor: pointer;
 }
 
 /*Style the bottom 20vh of the screen*/
