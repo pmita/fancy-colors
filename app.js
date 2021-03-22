@@ -10,20 +10,15 @@ sliders.forEach( slider =>{
     slider.addEventListener('input', hslControls);
 });
 
+colorDivs.forEach( (slider,index) =>{
+    slider.addEventListener('change', ()=>{
+        updateTextUI(index);
+    });
+});
+
 
 //Functions
-//Generate Hex color
 function generateHex(){
-    /*const letters = '#123456789ABCDEF';
-    let hash = '#';
-    for( let i=0; i<6; i++){
-        //Split the letters variable into an array format
-        //Randomly select a cell that corresponds to a letter or number
-        //Loop over 6 times to create a hex code
-        hash += letters[Math.floor(Math.random() * 16)];
-    }
-    return hash;*/
-
     //instead we can use chroma.js
     const hexColors = chroma.random();
     return hexColors;
@@ -31,71 +26,67 @@ function generateHex(){
 
 //Introduce random colors once we enter the page
 function randomColors(){
+    //Dont define a constant array
+    initialColors = [];
+
     colorDivs.forEach((div, index) =>{
-        //Select the first child of each div
-        //This represents the Hex h2 with the hex value
-        const hexText  = div.children[0];
-        //Generate a random color
-        const randomColor = generateHex();
-        //Add generated hex to background and header
+        const hexText  = div.children[0]; //Select the inner header of the div
+        const randomColor = generateHex(); //Generate a random color
+        initialColors.push(chroma(randomColor).hex()); //Push each color to a new array
+
+        //Apply color to background and header
         div.style.backgroundColor = randomColor;
         hexText.innerText = randomColor;
+        checkTextContrast(randomColor, hexText); //Check for contrast
 
-        //Check for contrast
-        checkTextContrast(randomColor, hexText);
+        const color = chroma(randomColor); //Returns an object with our color hsl values
 
-        //Initialize Color sliders
-        const color = chroma(randomColor);
-        //Grab all input slider per div
+        //Grab all input sliders and 'deconstruct' their values
         const sliders = div.querySelectorAll('.sliders input');
-        console.log(sliders);
-        //We know what each index corresponds to
-        const hue = sliders[0];
-        const brightness = sliders[1];
-        const saturation = sliders[2];
+        const hue = sliders[0]; //Corresponds to hue slider input
+        const brightness = sliders[1]; //Corresponds to brightness slider input
+        const saturation = sliders[2]; //Corresponds to saturation slider input
 
+        //Apply colors to the sliders as well
         colorizeSliders( color, hue, brightness, saturation);
     });
+
+    resetInputs();
 }
 
-function checkTextContrast(color, text){
-    //Find the lumosity for each color
-    const luminance = chroma(color).luminance();
+function checkTextContrast(color, element){
+    const luminance = chroma(color).luminance(); //Grab the brightness of each color
+    //Balance the contrast
     if (luminance > 0.5){
-        text.style.color = "black";
+        element.style.color = "black";
     } else{
-        text.style.color = "white";
+        element.style.color = "white";
     }
 }
 
 function colorizeSliders( color, hue, brightness, saturation){
-    //Scale saturation
-    const noSaturation = color.set('hsl.s', 0); //We can desaturate the selected color
-    const fullSaturation = color.set('hsl.s', 1); //We can also oversature the selected color
-    //Create a spectrum of [noSaturation, fullSaturation] with color being the midpoint
-    const scaleSaturation = chroma.scale([noSaturation, color, fullSaturation]);
+    //Scale saturation based on our color
+    const noSaturation = color.set('hsl.s', 0); // [min. )
+    const fullSaturation = color.set('hsl.s', 1); // (,max]
+    const scaleSaturation = chroma.scale([noSaturation, color, fullSaturation]); //[noSaturation, ..., ..., color, ..., ...,  fullSaturation]
     //Update the input specturm accordingly
     saturation.style.backgroundImage = `linear-gradient(to right, ${scaleSaturation(0)}, ${scaleSaturation(1)})`;
 
-    //We do the same with brightness
-    //However brighness we only need the midpoint set
-    //Since the edge are either white or black
-    const midBright = color.set('hsl.l', 0.5);
+    //Scale brightness based on how black/white our color gets
+    const midBright = color.set('hsl.l', 0.5); // [black, ..., midpoint = color, ..., white]
     const scaleBrightness = chroma.scale(['black', midBright, 'white']);
     brightness.style.backgroundImage = `linear-gradient(to right, ${scaleBrightness(0)}, ${scaleBrightness(0.5)}, ${scaleBrightness(1)})`;
 
-    //Hue sliders are alwayrs the same so no need for chroma
+    //Hue spectrum scales the same all the time
     hue.style.backgroundImage = `linear-gradient(to right, rgb(204, 75,75), rgb(204, 204, 75), rgb(75, 204, 75), rgb(75, 204, 204), rgb(75, 75, 204), rgb(204, 75, 204), rgb(204, 75, 75))`
 }
 
 function hslControls(e){
-    //console.log(e);
     //Find out which input we are sliding
     const index = 
         e.target.getAttribute('data-hue') || 
         e.target.getAttribute('data-bright') || 
         e.target.getAttribute('data-saturation');
-    console.log(index);
 
     //Grab all the inputson that sliders we are changing
     let sliders = e.target.parentElement.querySelectorAll('input[type="range"');
@@ -104,15 +95,57 @@ function hslControls(e){
     const brightness = sliders[1];
     const saturation = sliders[2]
 
-    const bgColor = colorDivs[index].querySelector('h2').innerText;
+    const bgColor = initialColors[index];
     let color = chroma(bgColor)
      .set('hsl.s', saturation.value)
      .set('hsl.l', brightness.value)
      .set('hsl.h', hue.value);
 
-    colorDivs[index].style.backgroundColor = color;
+    colorDivs[index].style.backgroundColor = color;  
+    colorizeSliders( color, hue, brightness, saturation); //Colorize inputs
 }
 
+function updateTextUI(index){
+    //Find the current color for div we are altering
+    const activeDiv = colorDivs[index];
+    const color = chroma(activeDiv.style.backgroundColor);
+
+    //Once the user lets go of the input slider we are updating the color
+    const textHex = activeDiv.querySelector('h2');
+    textHex.innerText = color.hex();
+    
+    checkTextContrast(color, textHex); //Check contrast for new text and icons
+    const icons = activeDiv.querySelectorAll('.controls button');
+    for(icon of icons){
+        checkTextContrast(color, icon);
+    }
+}
+
+function resetInputs(){
+    const sliders = document.querySelectorAll('.sliders input');
+    sliders.forEach( slider =>{
+        console.log(slider.getAttribute("data-hue"));
+        if (slider.name === "hue") {
+            const hueColor = initialColors[slider.getAttribute("data-hue")];
+            const hueValue = chroma(hueColor).hsl()[0];
+            slider.value = Math.floor(hueValue);
+          }
+
+        if(slider.name === 'brightness'){
+            const brightColor = initialColors[slider.getAttribute('data-bright')];
+            const brightValue = chroma(brightColor).hsl()[2]; //Passes in the hue
+            slider.value = Math.floor(brightValue * 100) / 100;
+        }
+
+        if(slider.name === 'saturation'){
+            const saturationColor = initialColors[slider.getAttribute('data-saturation')];
+            const saturationValue = chroma(saturationColor).hsl()[1]; //Passes in the hue
+            slider.value = Math.floor(saturationValue *100) / 100;
+            console.log(saturationValue);
+        }
+
+    });
+}
 
 
 randomColors();
